@@ -21,6 +21,7 @@ services:
       - key: CORE_CREATION_SECRET
         sync: false
     autoDeploy: false
+    plan: free
 
   # Frontend Static Site
   - type: web
@@ -31,9 +32,10 @@ services:
     envVars:
       - key: VITE_API_BASE_URL
         value: https://placement-pitcher-backend.onrender.com
+    plan: free
 
 databases:
   - name: placement-pitcher-db
     databaseName: placement_pitcher
     user: placement_user
-
+    plan: free

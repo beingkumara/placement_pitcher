@@ -9,6 +9,13 @@ DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./app.db")
 if DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
+# Ensure SSL is used for postgresql connections (required for Render)
+if "postgresql://" in DATABASE_URL:
+    if "?" not in DATABASE_URL:
+        DATABASE_URL += "?sslmode=require"
+    elif "sslmode=" not in DATABASE_URL:
+        DATABASE_URL += "&sslmode=require"
+
 engine = create_engine(
     DATABASE_URL, 
     connect_args={"check_same_thread": False} if "sqlite" in DATABASE_URL else {}

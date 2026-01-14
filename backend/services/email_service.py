@@ -12,7 +12,10 @@ def send_email_smtp(to_email: str, subject: str, body: str, files: Optional[List
     sender_password = os.getenv("SMTP_PASSWORD")
     
     if not sender_email or not sender_password:
+        print("Error: SMTP_EMAIL or SMTP_PASSWORD not set in environment.")
         raise ValueError("SMTP Credentials not set in environment variables.")
+
+    print(f"Attempting to send email to {to_email} with subject: '{subject}'")
 
     msg = MIMEMultipart()
     msg['From'] = sender_email
@@ -32,15 +35,17 @@ def send_email_smtp(to_email: str, subject: str, body: str, files: Optional[List
             msg.attach(part)
 
     try:
+        print("Connecting to SMTP server...")
         server = smtplib.SMTP(smtp_server, smtp_port)
         server.starttls()
         server.login(sender_email, sender_password)
         text = msg.as_string()
         server.sendmail(sender_email, to_email, text)
         server.quit()
+        print(f"Email sent successfully to {to_email}")
         return True
     except Exception as e:
-        print(f"Failed to send email: {e}")
+        print(f"Failed to send email to {to_email}: {e}")
         raise e
 
 import imaplib

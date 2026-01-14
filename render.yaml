@@ -20,6 +20,10 @@ services:
         sync: false # User will input this in dashboard
       - key: CORE_CREATION_SECRET
         sync: false
+      - key: SMTP_EMAIL
+        sync: false
+      - key: SMTP_PASSWORD
+        sync: false
     autoDeploy: false
     plan: free
 

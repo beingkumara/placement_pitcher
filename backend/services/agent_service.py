@@ -101,6 +101,7 @@ def generate_pitch_email(contact: Contact) -> dict:
             if text_response.endswith("```"):
                 text_response = text_response[:-3]
                 
+            print(f"Pitch generated successfully using model: {model_name}")
             return json.loads(text_response)
         except Exception as e:
             print(f"Model {model_name} failed: {e}")

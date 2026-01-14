@@ -128,6 +128,7 @@ def create_user(user: UserCreate, current_user: User = Depends(get_current_user)
         # For local dev: http://localhost:5173
         base_url = os.getenv("FRONTEND_URL", "http://localhost:5173")
         invite_link = f"{base_url}/?token={token}"
+        print(f"Sending invitation to new user {new_user.email}...")
         notification_service.notify_invitation(new_user.email, invite_link, new_user.name)
     except Exception as e:
         print(f"Failed to send invitation email: {e}")
@@ -498,6 +499,7 @@ async def send_email(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
+    print(f"Received request to send email to {contact_email} with subject: {subject}")
     try:
         # Check if user is assigned to this contact (if not core)
         contact = db.query(ContactForDB).filter(

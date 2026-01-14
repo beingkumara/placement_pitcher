@@ -30,10 +30,7 @@ services:
     staticPublishPath: frontend/dist
     envVars:
       - key: VITE_API_BASE_URL
-        fromService:
-          type: web
-          name: placement-pitcher-backend
-          property: url
+        value: https://placement-pitcher-backend.onrender.com
 
 databases:
   - name: placement-pitcher-db

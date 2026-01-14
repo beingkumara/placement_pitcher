@@ -3,7 +3,36 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.application import MIMEApplication
 import os
+import logging
 from typing import List, Tuple, Optional
+
+logger = logging.getLogger(__name__)
+
+def test_connection() -> bool:
+    """
+    Tests the SMTP connection using environment credentials.
+    Returns True if successful, raises Exception otherwise.
+    """
+    smtp_server = "smtp.gmail.com"
+    smtp_port = 587
+    sender_email = os.getenv("SMTP_EMAIL")
+    sender_password = os.getenv("SMTP_PASSWORD")
+
+    if not sender_email or not sender_password:
+        logger.error("SMTP_EMAIL or SMTP_PASSWORD not set in environment.")
+        raise ValueError("SMTP Credentials not set in environment variables.")
+    
+    try:
+        logger.info("Testing SMTP connection...")
+        server = smtplib.SMTP(smtp_server, smtp_port)
+        server.starttls()
+        server.login(sender_email, sender_password)
+        server.quit()
+        logger.info("SMTP connection verification successful.")
+        return True
+    except Exception as e:
+        logger.error(f"SMTP connection test failed: {e}")
+        raise e
 
 def send_email_smtp(to_email: str, subject: str, body: str, files: Optional[List[Tuple[str, bytes]]] = None, reply_to_message_id: Optional[str] = None):
     smtp_server = "smtp.gmail.com"
@@ -12,10 +41,10 @@ def send_email_smtp(to_email: str, subject: str, body: str, files: Optional[List
     sender_password = os.getenv("SMTP_PASSWORD")
     
     if not sender_email or not sender_password:
-        print("Error: SMTP_EMAIL or SMTP_PASSWORD not set in environment.")
+        logger.error("SMTP_EMAIL or SMTP_PASSWORD not set in environment.")
         raise ValueError("SMTP Credentials not set in environment variables.")
 
-    print(f"Attempting to send email to {to_email} with subject: '{subject}'")
+    logger.info(f"Attempting to send email to {to_email} with subject: '{subject}'")
 
     msg = MIMEMultipart()
     msg['From'] = sender_email
@@ -35,17 +64,17 @@ def send_email_smtp(to_email: str, subject: str, body: str, files: Optional[List
             msg.attach(part)
 
     try:
-        print("Connecting to SMTP server...")
+        # logger.info("Connecting to SMTP server...")
         server = smtplib.SMTP(smtp_server, smtp_port)
         server.starttls()
         server.login(sender_email, sender_password)
         text = msg.as_string()
         server.sendmail(sender_email, to_email, text)
         server.quit()
-        print(f"Email sent successfully to {to_email}")
+        logger.info(f"Email sent successfully to {to_email}")
         return True
     except Exception as e:
-        print(f"Failed to send email to {to_email}: {e}")
+        logger.error(f"Failed to send email to {to_email}: {e}")
         raise e
 
 import imaplib

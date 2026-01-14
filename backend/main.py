@@ -2,10 +2,14 @@ from dotenv import load_dotenv
 import os
 import secrets
 from datetime import datetime, timedelta
-
+import logging
 
 # Load env vars before imports to ensure they are available for module-level configs
 load_dotenv()
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Depends, status
 from fastapi.middleware.cors import CORSMiddleware
@@ -13,7 +17,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from services.excel_service import read_contacts_from_file
 from services.agent_service import generate_pitch_email
-from services.email_service import send_email_smtp, check_for_replies
+from services.email_service import send_email_smtp, check_for_replies, test_connection
 from services import notification_service
 from models import Contact, EmailGenerationRequest, EmailstartRequest, EmailReplyModel, SentEmailModel
 from models_db import ContactForDB, SentEmail, User, UserRole, EmailReply, Team
@@ -22,6 +26,7 @@ from auth import get_current_user, get_password_hash, verify_password, create_ac
 from datetime import timedelta
 from typing import List, Optional
 from pydantic import BaseModel
+from routers import admin_debug
 
 class ContactUpdate(BaseModel):
     hr_name: Optional[str] = None
@@ -37,6 +42,8 @@ class ContactUpdate(BaseModel):
 # Create tables moved to startup event
 
 app = FastAPI(title="Placement Pitcher Agent API")
+
+app.include_router(admin_debug.router)
 
 app.add_middleware(
     CORSMiddleware,
@@ -592,3 +599,10 @@ def startup_event():
                 print(f"Error seeding user: {e}")
     except Exception as e:
         print(f"Error checking for core user (DB might be unreachable): {e}")
+
+    # Check SMTP connection on startup
+    try:
+        logger.info("Checking SMTP connection on startup...")
+        test_connection()
+    except Exception as e:
+        logger.error(f"Startup SMTP Check Failed: {e}")

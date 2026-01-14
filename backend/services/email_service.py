@@ -44,10 +44,18 @@ def test_connection() -> bool:
         ipv4_server = get_ipv4_address(smtp_server, smtp_port)
         logger.info(f"Resolved {smtp_server} to {ipv4_server}")
         
-        server = smtplib.SMTP(ipv4_server, smtp_port)
+        logger.info(f"Connecting to SMTP server {ipv4_server}:{smtp_port} with timeout=10s...")
+        server = smtplib.SMTP(ipv4_server, smtp_port, timeout=10)
+        
+        logger.info("Starting TLS...")
         server.starttls()
+        
+        logger.info(f"Logging in as {sender_email}...")
         server.login(sender_email, sender_password)
+        
+        logger.info("Quitting server...")
         server.quit()
+        
         logger.info("SMTP connection verification successful.")
         return True
     except Exception as e:

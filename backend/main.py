@@ -577,13 +577,16 @@ def startup_event():
     except Exception as e:
         print(f"Error creating tables: {e}")
         
-    core_user = db.query(User).filter(User.role == UserRole.CORE).first()
-    if not core_user:
-        try:
-            pwd = get_password_hash("admin123")
-            user = User(email="admin@example.com", password_hash=pwd, role=UserRole.CORE, name="Admin Core")
-            db.add(user)
-            db.commit()
-            print("Seeded admin user: admin@example.com / admin123")
-        except Exception as e:
-            print(f"Error seeding user: {e}")
+    try:
+        core_user = db.query(User).filter(User.role == UserRole.CORE).first()
+        if not core_user:
+            try:
+                pwd = get_password_hash("admin123")
+                user = User(email="admin@example.com", password_hash=pwd, role=UserRole.CORE, name="Admin Core")
+                db.add(user)
+                db.commit()
+                print("Seeded admin user: admin@example.com / admin123")
+            except Exception as e:
+                print(f"Error seeding user: {e}")
+    except Exception as e:
+        print(f"Error checking for core user (DB might be unreachable): {e}")

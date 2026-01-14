@@ -16,7 +16,7 @@ services:
         generateValue: true
       - key: FRONTEND_URL
         value: https://placement-pitcher-frontend.onrender.com # Placeholder, update after deployment or use manual
-      - key: OPENAI_API_KEY
+      - key: GOOGLE_API_KEY
         sync: false # User will input this in dashboard
       - key: CORE_CREATION_SECRET
         sync: false

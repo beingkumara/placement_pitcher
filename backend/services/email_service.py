@@ -4,9 +4,25 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.application import MIMEApplication
 import os
 import logging
+import socket
 from typing import List, Tuple, Optional
 
 logger = logging.getLogger(__name__)
+
+def get_ipv4_address(hostname: str, port: int) -> str:
+    """
+    Resolves hostname to the first available IPv4 address.
+    """
+    try:
+        # socket.AF_INET forces IPv4
+        addr_info = socket.getaddrinfo(hostname, port, family=socket.AF_INET, proto=socket.IPPROTO_TCP)
+        # addr_info is list of (family, type, proto, canonname, sockaddr)
+        # sockaddr is (ip, port)
+        if addr_info:
+            return addr_info[0][4][0]
+    except Exception as e:
+        logger.error(f"Failed to resolve IPv4 for {hostname}: {e}")
+    return hostname # Fallback to original hostname if resolution fails
 
 def test_connection() -> bool:
     """
@@ -24,7 +40,11 @@ def test_connection() -> bool:
     
     try:
         logger.info("Testing SMTP connection...")
-        server = smtplib.SMTP(smtp_server, smtp_port)
+        # Resolve to IPv4 to avoid "Network is unreachable" on IPv6-unaware environments
+        ipv4_server = get_ipv4_address(smtp_server, smtp_port)
+        logger.info(f"Resolved {smtp_server} to {ipv4_server}")
+        
+        server = smtplib.SMTP(ipv4_server, smtp_port)
         server.starttls()
         server.login(sender_email, sender_password)
         server.quit()
@@ -32,6 +52,7 @@ def test_connection() -> bool:
         return True
     except Exception as e:
         logger.error(f"SMTP connection test failed: {e}")
+        # Re-raise to ensure startup fails and alerts user
         raise e
 
 def send_email_smtp(to_email: str, subject: str, body: str, files: Optional[List[Tuple[str, bytes]]] = None, reply_to_message_id: Optional[str] = None):
@@ -65,7 +86,10 @@ def send_email_smtp(to_email: str, subject: str, body: str, files: Optional[List
 
     try:
         # logger.info("Connecting to SMTP server...")
-        server = smtplib.SMTP(smtp_server, smtp_port)
+        # Force IPv4
+        ipv4_server = get_ipv4_address(smtp_server, smtp_port)
+        
+        server = smtplib.SMTP(ipv4_server, smtp_port)
         server.starttls()
         server.login(sender_email, sender_password)
         text = msg.as_string()

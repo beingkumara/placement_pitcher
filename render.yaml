@@ -23,7 +23,7 @@ services:
     autoDeploy: false
 
   # Frontend Static Site
-  - type: static
+  - type: static_site
     name: placement-pitcher-frontend
     runtime: node
     buildCommand: cd frontend && npm install && npm run build

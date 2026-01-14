@@ -27,7 +27,7 @@ services:
     name: placement-pitcher-frontend
     runtime: static
     buildCommand: cd frontend && npm install && npm run build
-    publishDir: frontend/dist
+    staticPublishPath: frontend/dist
     envVars:
       - key: VITE_API_BASE_URL
         fromService:

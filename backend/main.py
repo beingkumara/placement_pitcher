@@ -34,7 +34,7 @@ class ContactUpdate(BaseModel):
     phone_numbers: Optional[str] = None
 
 # Create tables
-Base.metadata.create_all(bind=engine)
+# Create tables moved to startup event
 
 app = FastAPI(title="Placement Pitcher Agent API")
 
@@ -571,6 +571,12 @@ def get_sent_emails(db: Session = Depends(get_db), current_user: User = Depends(
 def startup_event():
     # Helper to seed a core user if none exists
     db = next(get_db())
+    # Create tables
+    try:
+        Base.metadata.create_all(bind=engine)
+    except Exception as e:
+        print(f"Error creating tables: {e}")
+        
     core_user = db.query(User).filter(User.role == UserRole.CORE).first()
     if not core_user:
         try:

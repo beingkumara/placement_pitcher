@@ -15,7 +15,7 @@ import { API_BASE_URL } from './config'
 
 // Types locally defined or imported
 interface Contact {
-  id: number
+  id: string
   company_name: string
   hr_name: string | null
   email: string | null
@@ -26,15 +26,15 @@ interface Contact {
   status: string
   context: string | null
   row_index: number
-  assigned_to_id?: number | null
+  assigned_to_id?: string | null
   assigned_to_name?: string | null
-  created_by_id?: number | null
+  created_by_id?: string | null
   replies?: EmailReply[]
   sent_emails?: ContactSentEmail[]
 }
 
 interface EmailReply {
-  id: number
+  id: string
   subject: string
   body: string
   received_at: string
@@ -43,7 +43,7 @@ interface EmailReply {
 
 // For the nested history
 interface ContactSentEmail {
-  id: number
+  id: string
   subject: string
   body: string
   sent_at: string
@@ -52,7 +52,7 @@ interface ContactSentEmail {
 
 // For the main "Sent" tab list
 interface SentEmailSummary {
-  id: number
+  id: string
   subject: string
   sent_at: string
   contact_company: string
@@ -73,7 +73,7 @@ function DashboardContent() {
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null)
 
   // Drafts state persisted in localStorage
-  const [drafts, setDrafts] = useState<Record<number, Draft>>(() => {
+  const [drafts, setDrafts] = useState<Record<string, Draft>>(() => {
     const saved = localStorage.getItem('pitch_drafts')
     return saved ? JSON.parse(saved) : {}
   })
@@ -92,6 +92,14 @@ function DashboardContent() {
       if (contactsRes.ok) {
         const data = await contactsRes.json()
         setContacts(data as Contact[])
+
+        // Update selectedContact if it exists to show new data (like new sent email)
+        if (selectedContact) {
+          const updated = (data as Contact[]).find(c => c.id === selectedContact.id)
+          if (updated) {
+            setSelectedContact(updated)
+          }
+        }
       }
 
       const emailsRes = await fetch(`${API_BASE_URL}/api/sent-emails`, { headers })
@@ -134,11 +142,11 @@ function DashboardContent() {
     fetchData()
   }, [activeTab, user])
 
-  const handleDraftUpdate = (contactId: number, draft: Draft) => {
+  const handleDraftUpdate = (contactId: string, draft: Draft) => {
     setDrafts(prev => ({ ...prev, [contactId]: draft }))
   }
 
-  const handleDraftClear = (contactId: number) => {
+  const handleDraftClear = (contactId: string) => {
     setDrafts(prev => {
       const newDrafts = { ...prev }
       delete newDrafts[contactId]
@@ -146,11 +154,11 @@ function DashboardContent() {
     })
   }
 
-  const handleAssign = async (contactIds: number[], userId: number) => {
+  const handleAssign = async (contactIds: string[], userId: string) => {
     try {
       if (!user) return
 
-      const res = await fetch(`${API_BASE_URL}/api/assign`, {
+      const res = await fetch(`${API_BASE_URL}/api/contacts/assign`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

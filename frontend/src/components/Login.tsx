@@ -33,7 +33,8 @@ const Login: React.FC = () => {
             }
 
             const data = await response.json();
-            login(data.access_token, data.role, data.name, data.id);
+            // Normalize role to lowercase to match frontend expectations
+            login(data.access_token, data.role.toLowerCase(), data.name, data.id);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Login failed');
         } finally {

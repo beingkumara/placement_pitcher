@@ -3,9 +3,10 @@ import { Check, X, Pencil, Trash2, ExternalLink, ChevronDown, CheckCircle, Plus 
 import { toast } from 'sonner'
 import { useAuth } from '../auth/AuthProvider'
 import AddCompanyModal from './AddCompanyModal'
+import { API_BASE_URL } from '../config'
 
 interface Contact {
-    id: number
+    id: string
     company_name: string
     hr_name: string | null
     email: string | null
@@ -15,16 +16,16 @@ interface Contact {
     linkedin: string | null
     status: string
     context: string | null
-    assigned_to_id?: number | null
+    assigned_to_id?: string | null
     assigned_to_name?: string | null
-    created_by_id?: number | null
+    created_by_id?: string | null
     row_index: number
     replies?: EmailReply[]
     sent_emails?: SentEmail[]
 }
 
 interface EmailReply {
-    id: number
+    id: string
     subject: string
     received_at: string
     body: string
@@ -32,35 +33,35 @@ interface EmailReply {
 }
 
 interface SentEmail {
-    id: number
+    id: string
     subject: string
     sent_at: string
     body: string
 }
 
 interface User {
-    id: number
+    id: string
     name: string
 }
 
 interface CompanyTableProps {
     contacts: Contact[]
     onUpdate: () => void
-    onAssign: (contactIds: number[], userId: number) => void
+    onAssign: (contactIds: string[], userId: string) => void
     onSelect?: (contact: Contact) => void
-    selectedId?: number
+    selectedId?: string
 }
 
 const CompanyTable: React.FC<CompanyTableProps> = ({ contacts, onUpdate, onAssign, onSelect, selectedId }) => {
     const { user } = useAuth()
     const [team, setTeam] = useState<User[]>([])
-    const [editingId, setEditingId] = useState<number | null>(null)
+    const [editingId, setEditingId] = useState<string | null>(null)
     const [editForm, setEditForm] = useState<Partial<Contact>>({})
     const [isAddModalOpen, setIsAddModalOpen] = useState(false)
 
     useEffect(() => {
         if (user?.role === 'core') {
-            fetch('http://localhost:8000/api/users', {
+            fetch(`${API_BASE_URL}/api/users`, {
                 headers: { 'Authorization': `Bearer ${user.token}` }
             })
                 .then(res => res.json())
@@ -108,7 +109,7 @@ const CompanyTable: React.FC<CompanyTableProps> = ({ contacts, onUpdate, onAssig
                 phone_numbers: phones.slice(1).join(', ') || null
             }
 
-            const res = await fetch(`http://localhost:8000/api/contacts/${editingId}`, {
+            const res = await fetch(`${API_BASE_URL}/api/contacts/${editingId}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -128,11 +129,11 @@ const CompanyTable: React.FC<CompanyTableProps> = ({ contacts, onUpdate, onAssig
         }
     }
 
-    const handleDelete = async (id: number) => {
+    const handleDelete = async (id: string) => {
         if (!confirm("Are you sure you want to delete this contact?")) return
 
         try {
-            const res = await fetch(`http://localhost:8000/api/contacts/${id}`, {
+            const res = await fetch(`${API_BASE_URL}/api/contacts/${id}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${user?.token}`
@@ -229,7 +230,7 @@ const CompanyTable: React.FC<CompanyTableProps> = ({ contacts, onUpdate, onAssig
                                                 <select
                                                     className="appearance-none w-full bg-slate-50 border border-transparent hover:border-slate-200 rounded px-2 py-1 text-xs pr-6 cursor-pointer focus:outline-none focus:ring-1 focus:ring-indigo-500"
                                                     value={contact.assigned_to_id || ''}
-                                                    onChange={(e) => onAssign([contact.id], Number(e.target.value))}
+                                                    onChange={(e) => onAssign([contact.id], e.target.value)}
                                                 >
                                                     <option value="">Unassigned</option>
                                                     {team.map(member => (

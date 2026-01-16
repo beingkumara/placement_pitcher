@@ -7,7 +7,7 @@ import { API_BASE_URL } from '../config';
 
 
 interface Contact {
-    id: number;
+    id: string;
     company_name: string;
     hr_name: string | null;
     email: string | null;
@@ -18,8 +18,8 @@ interface Contact {
     status: string;
     context: string | null;
     row_index: number;
-    replies?: any[];
-    sent_emails?: { id: number; subject: string; body: string; sent_at: string; attachment_names?: string | null }[];
+    replies?: { id: string; subject: string; body: string; received_at: string; sender_email: string; message_id?: string; messageId?: string }[];
+    sent_emails?: { id: string; subject: string; body: string; sent_at: string; attachment_names?: string | null; message_id?: string; messageId?: string }[];
 }
 
 interface Draft {
@@ -52,7 +52,30 @@ const EmailPreview: React.FC<EmailPreviewProps> = ({ contact, initialDraft, onDr
             setBody(initialDraft.body);
             setHasGenerated(initialDraft.hasGenerated);
         } else {
-            setSubject('');
+            // Check for history to pre-fill subject (Re: ...)
+            const rawReplies = contact.replies || (contact as any).replies || [];
+            const rawSent = contact.sent_emails || (contact as any).sentEmails || [];
+
+            const replies = rawReplies.map((r: any) => ({
+                date: new Date(r.received_at || r.receivedAt),
+                subject: r.subject
+            }));
+            const sents = rawSent.map((s: any) => ({
+                date: new Date(s.sent_at || s.sentAt),
+                subject: s.subject
+            }));
+
+            const thread = [...replies, ...sents].sort((a, b) => a.date.getTime() - b.date.getTime());
+
+            if (thread.length > 0) {
+                const lastSubject = thread[thread.length - 1].subject;
+                // Prevent stacking Re: Re:
+                const cleanSubject = lastSubject.replace(/^(Re:\s*)+/i, '');
+                setSubject(`Re: ${cleanSubject}`);
+            } else {
+                setSubject('');
+            }
+
             setBody('');
             setHasGenerated(false);
             setFiles([]);
@@ -77,7 +100,7 @@ const EmailPreview: React.FC<EmailPreviewProps> = ({ contact, initialDraft, onDr
         setIsGenerating(true);
         try {
             const response = await axios.post(`${API_BASE_URL}/api/generate-email`, {
-                contact: contact
+                contact_id: contact.id
             }, {
                 headers: { Authorization: `Bearer ${user.token}` }
             });
@@ -111,11 +134,49 @@ const EmailPreview: React.FC<EmailPreviewProps> = ({ contact, initialDraft, onDr
         }
         setIsSending(true);
         try {
+            // Find the last message ID to reply to
+            console.log("Contact object for threading:", contact);
+            let lastMessageId = "";
+
+            // Robust access to arrays (snake_case or camelCase)
+            const rawReplies = contact.replies || (contact as any).replies || [];
+            const rawSentEmails = contact.sent_emails || (contact as any).sentEmails || [];
+
+            const replies = rawReplies.map((r: any) => ({
+                date: new Date(r.received_at || r.receivedAt),
+                // Handle both snake_case (API default) and camelCase (potential override)
+                messageId: r.message_id || r.messageId
+            }));
+
+            const sents = rawSentEmails.map((s: any) => ({
+                date: new Date(s.sent_at || s.sentAt),
+                messageId: s.message_id || s.messageId
+            }));
+
+            const thread = [...replies, ...sents].sort((a, b) => a.date.getTime() - b.date.getTime());
+            console.log("Thread sorted:", thread);
+
+            if (thread.length > 0) {
+                const lastMsg = thread[thread.length - 1];
+                if (lastMsg.messageId) {
+                    lastMessageId = lastMsg.messageId;
+                    console.log("Found lastMessageId:", lastMessageId);
+                } else {
+                    console.warn("Last message in thread has no messageId!", lastMsg);
+                }
+            }
+
             const formData = new FormData();
             formData.append('subject', subject);
             formData.append('body', body);
             formData.append('contact_email', contact.email);
             formData.append('contact_company_name', contact.company_name);
+
+            if (lastMessageId) {
+                formData.append('in_reply_to_message_id', lastMessageId);
+            } else {
+                console.warn("No in_reply_to_message_id found to append. New thread will be created.");
+            }
 
             files.forEach(file => {
                 formData.append('files', file);
@@ -172,23 +233,26 @@ const EmailPreview: React.FC<EmailPreviewProps> = ({ contact, initialDraft, onDr
             {/* Thread History - Scrollable */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50/50 border-b border-slate-100 min-h-0">
                 {(() => {
-                    const replies = (contact.replies || []).map((r: any) => ({
+                    const rawReplies = contact.replies || (contact as any).replies || [];
+                    const rawSent = contact.sent_emails || (contact as any).sentEmails || [];
+
+                    const replies = rawReplies.map((r: any) => ({
                         type: 'received',
                         id: r.id,
-                        date: new Date(r.received_at),
+                        date: new Date(r.received_at || r.receivedAt),
                         subject: r.subject,
                         body: r.body,
-                        sender: r.sender_email
+                        sender: r.sender_email || r.fromEmail
                     }));
 
-                    const sents = (contact.sent_emails || []).map((s: any) => ({
+                    const sents = rawSent.map((s: any) => ({
                         type: 'sent',
                         id: s.id,
-                        date: new Date(s.sent_at),
+                        date: new Date(s.sent_at || s.sentAt),
                         subject: s.subject,
                         body: s.body,
                         sender: 'You',
-                        attachments: s.attachment_names ? s.attachment_names.split(',') : []
+                        attachments: (s.attachment_names || s.attachmentNames) ? (s.attachment_names || s.attachmentNames).split(',') : []
                     }));
 
                     const thread = [...replies, ...sents].sort((a, b) => a.date.getTime() - b.date.getTime());

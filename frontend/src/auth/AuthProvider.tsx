@@ -23,7 +23,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     useEffect(() => {
         // Check local storage on mount
         const token = localStorage.getItem('token');
-        const role = localStorage.getItem('role') as 'core' | 'coordinator';
+        const role = (localStorage.getItem('role') || '').toLowerCase() as 'core' | 'coordinator';
         const name = localStorage.getItem('name');
         const id = localStorage.getItem('id');
 
@@ -34,10 +34,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const login = (token: string, role: string, name: string, id: number) => {
         localStorage.setItem('token', token);
-        localStorage.setItem('role', role);
+        localStorage.setItem('role', role.toLowerCase());
         localStorage.setItem('name', name);
         localStorage.setItem('id', id.toString());
-        setUser({ token, role: role as 'core' | 'coordinator', name, id });
+        setUser({ token, role: role.toLowerCase() as 'core' | 'coordinator', name, id });
     };
 
     const logout = () => {

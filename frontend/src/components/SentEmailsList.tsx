@@ -1,7 +1,7 @@
 import { Mail, Calendar, User } from 'lucide-react'
 
 interface SentEmail {
-    id: number
+    id: string
     subject: string
     sent_at: string
     contact_company: string

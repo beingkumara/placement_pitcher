@@ -58,7 +58,7 @@ const TeamManagement: React.FC = () => {
                 body: JSON.stringify({
                     name: newName,
                     email: newEmail,
-                    role: 'coordinator'
+                    role: 'COORDINATOR'
                 })
             });
 

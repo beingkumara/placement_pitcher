@@ -25,7 +25,7 @@ services:
         sync: false
 
   # Frontend Static Site
-  - type: site
+  - type: web
     name: placement-pitcher-frontend
     env: static
     rootDir: frontend

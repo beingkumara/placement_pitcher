@@ -24,4 +24,14 @@ public class AppConfig {
         mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
         return mapper;
     }
+
+    @Bean
+    public org.springframework.boot.autoconfigure.mongo.MongoClientSettingsBuilderCustomizer mongoEnvCustomizer() {
+        return settings -> {
+            String uri = System.getenv("MONGO_URI");
+            if (uri != null && !uri.isEmpty()) {
+                settings.applyConnectionString(new com.mongodb.ConnectionString(uri));
+            }
+        };
+    }
 }

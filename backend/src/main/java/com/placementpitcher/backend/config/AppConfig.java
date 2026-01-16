@@ -26,12 +26,12 @@ public class AppConfig {
     }
 
     @Bean
-    public org.springframework.boot.autoconfigure.mongo.MongoClientSettingsBuilderCustomizer mongoEnvCustomizer() {
-        return settings -> {
-            String uri = System.getenv("MONGO_URI");
-            if (uri != null && !uri.isEmpty()) {
-                settings.applyConnectionString(new com.mongodb.ConnectionString(uri));
-            }
-        };
+    public com.mongodb.client.MongoClient mongoClient() {
+        String uri = System.getenv("MONGO_URI");
+        if (uri == null || uri.isEmpty()) {
+            // Fallback for local development if env var is missing
+            uri = "mongodb://localhost:27017/placement_pitcher";
+        }
+        return com.mongodb.client.MongoClients.create(uri);
     }
 }

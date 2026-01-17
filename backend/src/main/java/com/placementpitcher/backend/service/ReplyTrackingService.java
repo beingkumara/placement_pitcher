@@ -114,8 +114,26 @@ public class ReplyTrackingService {
             store.close();
 
         } catch (Exception e) {
+            // Handle interruption gracefully (common during shutdown)
+            if (isInterruption(e)) {
+                System.out.println("Reply checking task interrupted. This is normal during shutdown.");
+                // Restore interrupted status if needed, though we are exiting the task anyway
+                Thread.currentThread().interrupt();
+                return;
+            }
             throw new RuntimeException("Error checking email replies: " + e.getMessage(), e);
         }
+    }
+
+    private boolean isInterruption(Throwable e) {
+        if (e == null)
+            return false;
+        if (e instanceof InterruptedException)
+            return true;
+        if (e.getMessage() != null && e.getMessage().contains("Interrupted"))
+            return true;
+        // Check cause recursively
+        return isInterruption(e.getCause());
     }
 
     private String getTextFromMessage(Message message) throws Exception {

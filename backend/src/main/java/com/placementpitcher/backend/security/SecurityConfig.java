@@ -33,8 +33,9 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
-                        // Permit public endpoints (login, setup, admin creation)
-                        .requestMatchers("/token", "/api/setup-account", "/api/admin/create-core", "/error").permitAll()
+                        // Permit public endpoints (login, setup, admin creation, health check)
+                        .requestMatchers("/token", "/api/setup-account", "/api/admin/create-core", "/error", "/health")
+                        .permitAll()
                         .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll() // Allow
                                                                                                          // pre-flight
                                                                                                          // checks

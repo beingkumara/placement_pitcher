@@ -4,7 +4,9 @@ com/placementpitcher/backend/security/JwtAuthenticationFilter.class
 com/placementpitcher/backend/repository/TeamRepository.class
 com/placementpitcher/backend/model/Contact.class
 com/placementpitcher/backend/service/ReplyTrackingService.class
+com/placementpitcher/backend/dto/ErrorResponse.class
 com/placementpitcher/backend/controller/ContactController.class
+com/placementpitcher/backend/controller/HealthController.class
 com/placementpitcher/backend/controller/AdminController.class
 com/placementpitcher/backend/controller/AuthController.class
 com/placementpitcher/backend/service/ContactService.class
@@ -29,6 +31,7 @@ com/placementpitcher/backend/service/EmailSendingService.class
 com/placementpitcher/backend/repository/ContactRepository.class
 com/placementpitcher/backend/service/ExcelImportService.class
 com/placementpitcher/backend/dto/SetupAccountRequest.class
+com/placementpitcher/backend/exception/ResourceNotFoundException.class
 com/placementpitcher/backend/config/DataSeeder.class
 com/placementpitcher/backend/config/AppConfig.class
 com/placementpitcher/backend/security/SecurityConfig.class
@@ -36,6 +39,8 @@ com/placementpitcher/backend/controller/ImportController.class
 com/placementpitcher/backend/controller/AiController.class
 com/placementpitcher/backend/model/User.class
 com/placementpitcher/backend/service/CustomUserDetailsService.class
+com/placementpitcher/backend/exception/GlobalExceptionHandler.class
 com/placementpitcher/backend/BackendApplication.class
 com/placementpitcher/backend/controller/DashboardController.class
+com/placementpitcher/backend/exception/BusinessException.class
 com/placementpitcher/backend/model/User$Role.class

@@ -83,8 +83,12 @@ public class AdminController {
                             "This link is valid for 24 hours.", inviteLink));
         } catch (Exception e) {
             e.printStackTrace();
+            // Rollback: Delete User and Team
+            userRepository.delete(user);
+            teamRepository.delete(team);
+
             return ResponseEntity.internalServerError()
-                    .body("User created but failed to send email: " + e.getMessage());
+                    .body("Failed to send invitation email: " + e.getMessage() + ". User creation rolled back.");
         }
 
         return ResponseEntity.ok("Core user created and invitation sent successfully");

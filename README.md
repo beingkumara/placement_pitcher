@@ -59,6 +59,10 @@ The **CORE** user acts as the administrator for a team.
 - **JWT Authentication**: Secure stateless authentication mechanism.
 - **Role-Based Access Control (RBAC)**: Ensures users can only access features permitted by their role.
 
+### 6. Settings Management
+- **Placement Stats**: Manage and display real-time placement statistics (Total Students, Placed Interns, PPOs).
+- **Brochure Management**: Update and host the link to the official placement brochure.
+
 ## Getting Started
 
 ### Prerequisites

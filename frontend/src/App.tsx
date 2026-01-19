@@ -65,12 +65,27 @@ interface Draft {
   hasGenerated: boolean
 }
 
+interface Settings {
+  id?: string
+  placementStats: {
+    totalStudents: number
+    placedInterns: number
+    securedPPO: number
+  }
+  brochureUrl: string
+}
+
 function DashboardContent() {
   const { user, logout } = useAuth()
   const [activeTab, setActiveTab] = useState<'dashboard' | 'contacts' | 'sent' | 'team'>('dashboard')
   const [contacts, setContacts] = useState<Contact[]>([])
   const [sentEmails, setSentEmails] = useState<SentEmailSummary[]>([])
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null)
+  const [settings, setSettings] = useState<Settings>({
+    placementStats: { totalStudents: 0, placedInterns: 0, securedPPO: 0 },
+    brochureUrl: ''
+  })
+  const [isSavingSettings, setIsSavingSettings] = useState(false)
 
   // Drafts state persisted in localStorage
   const [drafts, setDrafts] = useState<Record<string, Draft>>(() => {
@@ -106,6 +121,16 @@ function DashboardContent() {
       if (emailsRes.ok) {
         const data = await emailsRes.json()
         setSentEmails(data)
+      }
+
+      const settingsRes = await fetch(`${API_BASE_URL}/api/settings`, { headers })
+      if (settingsRes.ok) {
+        const data = await settingsRes.json()
+        // Ensure structure if backend returns nulls or default
+        if (!data.placementStats) {
+          data.placementStats = { totalStudents: 0, placedInterns: 0, securedPPO: 0 }
+        }
+        setSettings(data)
       }
     } catch (error) {
       console.error("Failed to fetch data:", error)
@@ -178,6 +203,34 @@ function DashboardContent() {
     }
   }
 
+  const handleSaveSettings = async () => {
+    try {
+      if (!user) return
+      setIsSavingSettings(true)
+      const res = await fetch(`${API_BASE_URL}/api/settings`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${user.token}`
+        },
+        body: JSON.stringify(settings)
+      })
+
+      if (res.ok) {
+        const data = await res.json()
+        setSettings(data)
+        toast.success("Settings saved successfully")
+      } else {
+        toast.error("Failed to save settings")
+      }
+    } catch (e) {
+      console.error(e)
+      toast.error("Error saving settings")
+    } finally {
+      setIsSavingSettings(false)
+    }
+  }
+
   return (
     <div className="flex h-screen overflow-hidden text-slate-800 font-sans">
       <Toaster position="top-right" theme="light" closeButton richColors />
@@ -227,7 +280,12 @@ function DashboardContent() {
           )}
 
           <div className="mt-8 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 px-3">System</div>
-          <SidebarItem icon={<Settings size={20} />} label="Settings" />
+          <SidebarItem
+            icon={<Settings size={20} />}
+            label="Settings"
+            active={activeTab === 'dashboard' ? false : activeTab === 'contacts' ? false : activeTab === 'sent' ? false : activeTab === 'team' ? false : true}
+            onClick={() => setActiveTab('settings' as any)}
+          />
         </nav>
 
         <div className="p-4 border-t border-slate-800">
@@ -411,6 +469,85 @@ function DashboardContent() {
 
           {activeTab === 'team' && user?.role === 'core' && (
             <TeamManagement />
+          )}
+
+          {activeTab === ('settings' as any) && (
+            <div className="max-w-4xl mx-auto">
+              <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 overflow-hidden">
+                <div className="p-6 border-b border-slate-100 bg-white">
+                  <h3 className="font-semibold text-slate-900 flex items-center gap-2">
+                    <div className="p-1.5 rounded-lg bg-orange-50 text-orange-600"><Settings size={18} /></div>
+                    Global Settings
+                  </h3>
+                  <p className="text-sm text-slate-500 mt-1">Configure global settings for the AI agent (e.g. placement stats, brochure).</p>
+                </div>
+                <div className="p-8 space-y-6">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-4">Placement Stats (Context for AI)</label>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-500 mb-1">Total Students</label>
+                        <input
+                          type="number"
+                          className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-sm"
+                          value={settings.placementStats.totalStudents}
+                          onChange={(e) => setSettings({
+                            ...settings,
+                            placementStats: { ...settings.placementStats, totalStudents: parseInt(e.target.value) || 0 }
+                          })}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-500 mb-1">Secured Internship</label>
+                        <input
+                          type="number"
+                          className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-sm"
+                          value={settings.placementStats.placedInterns}
+                          onChange={(e) => setSettings({
+                            ...settings,
+                            placementStats: { ...settings.placementStats, placedInterns: parseInt(e.target.value) || 0 }
+                          })}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-500 mb-1">Secured PPO</label>
+                        <input
+                          type="number"
+                          className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-sm"
+                          value={settings.placementStats.securedPPO}
+                          onChange={(e) => setSettings({
+                            ...settings,
+                            placementStats: { ...settings.placementStats, securedPPO: parseInt(e.target.value) || 0 }
+                          })}
+                        />
+                      </div>
+                    </div>
+                    <p className="text-xs text-slate-400 mt-2">These stats will be formatted and provided to the AI to demonstrate placement success.</p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">Brochure URL</label>
+                    <input
+                      type="url"
+                      className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-sm"
+                      placeholder="https://example.com/brochure.pdf"
+                      value={settings.brochureUrl}
+                      onChange={(e) => setSettings({ ...settings, brochureUrl: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="pt-4 border-t border-slate-100 flex justify-end">
+                    <button
+                      onClick={handleSaveSettings}
+                      disabled={isSavingSettings}
+                      className="px-6 py-2.5 bg-indigo-600 text-white font-medium rounded-xl hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm shadow-indigo-200"
+                    >
+                      {isSavingSettings ? 'Saving...' : 'Save Settings'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
           )}
 
         </div>

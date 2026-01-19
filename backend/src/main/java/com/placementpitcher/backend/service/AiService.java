@@ -9,6 +9,10 @@ import org.springframework.web.client.RestClient;
 
 import java.util.List;
 import java.util.Map;
+import java.io.InputStream;
+import java.net.URL;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.text.PDFTextStripper;
 
 @Service
 public class AiService {
@@ -20,11 +24,14 @@ public class AiService {
 
     private final RestClient restClient;
     private final ObjectMapper objectMapper;
+    private final com.placementpitcher.backend.repository.SettingsRepository settingsRepository;
     private static final String GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models";
 
-    public AiService(RestClient.Builder restClientBuilder, ObjectMapper objectMapper) {
+    public AiService(RestClient.Builder restClientBuilder, ObjectMapper objectMapper,
+            com.placementpitcher.backend.repository.SettingsRepository settingsRepository) {
         this.restClient = restClientBuilder.build();
         this.objectMapper = objectMapper;
+        this.settingsRepository = settingsRepository;
     }
 
     public Map<String, String> generateEmail(Contact contact) {
@@ -88,9 +95,33 @@ public class AiService {
     private String buildPrompt(Contact contact) {
         String history = buildConversationHistory(contact);
 
+        // Fetch settings
+        String stats = "";
+        String brochure = "";
+
+        var allSettings = settingsRepository.findAll();
+        if (!allSettings.isEmpty()) {
+            var s = allSettings.get(0);
+            if (s.getPlacementStats() != null) {
+                stats = s.getPlacementStats().toString();
+            }
+            if (s.getBrochureUrl() != null) {
+                brochure = s.getBrochureUrl();
+                // Try to fetch content
+                String content = fetchBrochureContent(brochure);
+                if (!content.isEmpty()) {
+                    brochure += "\n\n[EXTRACTED BROCHURE CONTENT]:\n" + content;
+                }
+            }
+        }
+
         return String.format(
                 """
                         You are a professional placement coordinator pitching a candidate or sending a collaboration request to a company.
+
+                        KEY INFORMATION TO INCLUDE IF RELEVANT:
+                        Placement Stats: %s
+                        Brochure URL: %s
 
                         Context about the request: %s
                         Target Company: %s
@@ -109,6 +140,8 @@ public class AiService {
                         }
                         Do not include any other text.
                         """,
+                stats,
+                brochure,
                 contact.getContext() != null ? contact.getContext() : "General placement collaboration inquiry",
                 contact.getCompanyName(),
                 contact.getHrName() != null ? contact.getHrName() : "Hiring Manager",
@@ -144,6 +177,47 @@ public class AiService {
         }
 
         return sb.toString();
+    }
+
+    private String fetchBrochureContent(String urlString) {
+        try {
+            if (urlString == null || urlString.isEmpty())
+                return "";
+
+            // Simple validation
+            if (!urlString.toLowerCase().endsWith(".pdf")) {
+                // If not PDF, maybe just return empty or try to read text?
+                // For now assuming PDF for "brochure" context or strictly relying on PDFBox
+                return "";
+            }
+
+            URL url = java.net.URI.create(urlString).toURL();
+            try (InputStream is = url.openStream();
+                    PDDocument document = PDDocument.load(is)) {
+
+                if (document.isEncrypted()) {
+                    logger.warn("PDF is encrypted, cannot read: {}", urlString);
+                    return "";
+                }
+
+                PDFTextStripper stripper = new PDFTextStripper();
+                stripper.setSortByPosition(true);
+
+                // Limit pages to avoid massive context if it's 100 pages
+                int numPages = document.getNumberOfPages();
+                if (numPages > 10) {
+                    stripper.setEndPage(10); // Read first 10 pages
+                }
+
+                String text = stripper.getText(document);
+
+                // Basic cleanup
+                return text.trim();
+            }
+        } catch (Exception e) {
+            logger.error("Failed to fetch/parse brochure content from {}: {}", urlString, e.getMessage());
+            return "";
+        }
     }
 
     // Internal record for sorting

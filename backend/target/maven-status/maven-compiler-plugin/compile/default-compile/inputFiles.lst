@@ -11,6 +11,7 @@
 /Users/tejagutti/Documents/placement_pitcher/backend/src/main/java/com/placementpitcher/backend/controller/ImportController.java
 /Users/tejagutti/Documents/placement_pitcher/backend/src/main/java/com/placementpitcher/backend/controller/ReplyController.java
 /Users/tejagutti/Documents/placement_pitcher/backend/src/main/java/com/placementpitcher/backend/controller/SentEmailController.java
+/Users/tejagutti/Documents/placement_pitcher/backend/src/main/java/com/placementpitcher/backend/controller/SettingsController.java
 /Users/tejagutti/Documents/placement_pitcher/backend/src/main/java/com/placementpitcher/backend/controller/UserController.java
 /Users/tejagutti/Documents/placement_pitcher/backend/src/main/java/com/placementpitcher/backend/dto/AssignRequest.java
 /Users/tejagutti/Documents/placement_pitcher/backend/src/main/java/com/placementpitcher/backend/dto/CreateCoreRequest.java
@@ -26,9 +27,11 @@
 /Users/tejagutti/Documents/placement_pitcher/backend/src/main/java/com/placementpitcher/backend/model/Contact.java
 /Users/tejagutti/Documents/placement_pitcher/backend/src/main/java/com/placementpitcher/backend/model/EmailReply.java
 /Users/tejagutti/Documents/placement_pitcher/backend/src/main/java/com/placementpitcher/backend/model/SentEmail.java
+/Users/tejagutti/Documents/placement_pitcher/backend/src/main/java/com/placementpitcher/backend/model/Settings.java
 /Users/tejagutti/Documents/placement_pitcher/backend/src/main/java/com/placementpitcher/backend/model/Team.java
 /Users/tejagutti/Documents/placement_pitcher/backend/src/main/java/com/placementpitcher/backend/model/User.java
 /Users/tejagutti/Documents/placement_pitcher/backend/src/main/java/com/placementpitcher/backend/repository/ContactRepository.java
+/Users/tejagutti/Documents/placement_pitcher/backend/src/main/java/com/placementpitcher/backend/repository/SettingsRepository.java
 /Users/tejagutti/Documents/placement_pitcher/backend/src/main/java/com/placementpitcher/backend/repository/TeamRepository.java
 /Users/tejagutti/Documents/placement_pitcher/backend/src/main/java/com/placementpitcher/backend/repository/UserRepository.java
 /Users/tejagutti/Documents/placement_pitcher/backend/src/main/java/com/placementpitcher/backend/security/JwtAuthenticationFilter.java

@@ -34,7 +34,14 @@ public class ReplyTrackingService {
     @Scheduled(fixedRate = 60000) // Run every minute
     public void checkReplies() {
         if (imapHost == null || imapHost.contains("${")) {
-            throw new RuntimeException("IMAP not configured. Please check application.properties.");
+            System.out.println("WARN: IMAP not configured. Skipping reply check.");
+            return;
+        }
+
+        // Check if using missing/placeholder credentials and skip
+        if (imapUsername == null || imapUsername.isEmpty() || imapUsername.contains("placeholder")) {
+            System.out.println("WARN: Reply tracking skipped. IMAP_USERNAME is not configured.");
+            return;
         }
 
         try {

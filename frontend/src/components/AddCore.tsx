@@ -33,8 +33,18 @@ const AddCore: React.FC = () => {
                 setEmail('');
                 setSecret('');
             } else {
-                const data = await response.json();
-                setMsg({ type: 'error', text: data.detail || 'Failed to create core user' });
+                const contentType = response.headers.get("content-type");
+                let errorMessage = 'Failed to create core user';
+
+                if (contentType && contentType.includes("application/json")) {
+                    const data = await response.json();
+                    errorMessage = data.detail || errorMessage;
+                } else {
+                    const text = await response.text();
+                    errorMessage = text || response.statusText;
+                }
+
+                setMsg({ type: 'error', text: errorMessage });
             }
         } catch (error) {
             setMsg({ type: 'error', text: 'Network error occurred' });
